@@ -1,0 +1,11 @@
+import { z } from 'zod'
+const identifier = z.string().min(1).max(128)
+export const tableRefSchema = z.object({ schema: identifier, name: identifier }).strict()
+export const selectionSchema = z.object({ tables: z.array(tableRefSchema).min(1).max(20) }).strict()
+export const connectionConfigSchema = z.object({ host: z.string().trim().min(1).max(253).regex(/^[a-zA-Z0-9.:-]+$/, 'Enter a hostname or IP address, not a URL.'), port: z.number().int().min(1).max(65535), database: z.string().min(1).max(128), username: z.string().min(1).max(128), password: z.string().min(1).max(1024), ssl: z.enum(['verify-full', 'disable']) }).strict()
+export const connectionInputSchema = z.object({ name: z.string().trim().min(1).max(80), config: connectionConfigSchema }).strict()
+export const saveConnectionSchema = connectionInputSchema.extend({ tables: selectionSchema.shape.tables }).strict()
+export const registrationSchema = z.object({ name: z.string().trim().min(1).max(80), email: z.email().max(254).transform(value => value.toLowerCase()), password: z.string().min(10).max(128) }).strict()
+export const loginSchema = registrationSchema.omit({ name: true }).extend({ password: z.string().min(1).max(128) }).strict()
+export const askSchema = z.object({ connectionId: z.uuid(), question: z.string().trim().min(3).max(500) }).strict()
+export const validateSchema = z.object({ connectionId: z.uuid(), sql: z.string().trim().min(1).max(12000) }).strict()

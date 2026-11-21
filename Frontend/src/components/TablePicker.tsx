@@ -1,0 +1,8 @@
+import { useState } from 'react'
+import { tableKey,type SchemaTable,type TableRef } from '../types/workspace'
+export default function TablePicker({tables,selected,onChange,disabled=false}:{tables:SchemaTable[];selected:TableRef[];onChange:(tables:TableRef[])=>void;disabled?:boolean}) {
+  const [search,setSearch]=useState('')
+  const shown=tables.filter(table=>(table.schema+'.'+table.name).toLowerCase().includes(search.toLowerCase()))
+  return <section className="table-picker"><div className="workspace-result-heading"><h3>Choose accessible tables</h3><span>{selected.length}/20 selected</span></div><p>Select the tables AskDB may query. Tables with write permissions are disabled.</p><input aria-label="Search tables" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search schema or table..." disabled={disabled}/>
+  <div className="table-picker-list">{shown.map(table=>{const checked=selected.some(item=>tableKey(item)===tableKey(table));return <div className="table-option" key={tableKey(table)}><label><input type="checkbox" checked={checked} disabled={disabled||table.writable||(!checked&&selected.length>=20)} onChange={()=>onChange(checked?selected.filter(item=>tableKey(item)!==tableKey(table)):[...selected,{schema:table.schema,name:table.name}])}/><span>{table.schema}.{table.name}<small>{table.columns.length} columns {table.writable?' / write privileges: use a read-only login':''}</small></span></label><details><summary>Columns</summary><p>{table.columns.map(column=>column.name+' ('+column.type+')').join(', ')}</p></details></div>})}{!shown.length&&<p>No matching readable tables. Check your database grants or search.</p>}</div></section>
+}

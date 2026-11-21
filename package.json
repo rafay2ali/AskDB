@@ -1,0 +1,10 @@
+{
+  "name": "askdb",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm --prefix Backend run build && npm --prefix Frontend run build",
+    "test": "npm --prefix Backend test",
+    "test:browser": "node Backend/node_modules/tsx/dist/cli.mjs scripts/browser-smoke.mjs"
+  }
+}
