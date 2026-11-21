@@ -1,7 +1,6 @@
 # AskDB
 
-
-The application is deployed using **Vercel** for the frontend, **Render** for the backend, and **Supabase** for cloud-hosted PostgreSQL.
+AskDB is an AI-powered PostgreSQL analytics platform that turns natural-language questions into validated, read-only SQL queries using Google Gemini. Users can create accounts, securely connect their databases, select tables, and explore results through sortable tables, charts, CSV exports, and private query history.
 
 ## 🌐 Live Demo
 
