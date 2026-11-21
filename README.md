@@ -1,90 +1,232 @@
 # AskDB
 
-A PostgreSQL analytics platform: create an account, connect your own read-only database, choose tables, and ask Gemini questions. There is no sample analytics database, seeded result preview, fixed question translator, or shared default customer connection.
 
-## Start locally
+The application is deployed using **Vercel** for the frontend, **Render** for the backend, and **Supabase** for cloud-hosted PostgreSQL.
 
-Requires Node.js 22.13+ and PostgreSQL reachable from the backend. Node 22 reports an experimental warning for its SQLite module; that module stores application accounts/settings only, not analytics rows.
+## 🌐 Live Demo
 
-Install dependencies once:
+| Service | Deployment |
+|---|---|
+| **Frontend (Vercel)** | [ask-db-seven.vercel.app](https://ask-db-seven.vercel.app/) |
+| **Backend API (Render)** | [askdb-hww5.onrender.com](https://askdb-hww5.onrender.com) |
+| **Database** | Supabase PostgreSQL |
+| **GitHub Repository** | [AskDB](https://github.com/rafay2ali/AskDB) |
 
-    npm --prefix Backend install
-    npm --prefix Frontend install
+## 🚀 Tech Stack
 
-Keep your Gemini key in Backend/.env:
+### Frontend
+- React.js
+- TypeScript
+- Vite
+- REST API integration
 
-    GEMINI_API_KEY=your_private_key
-    GEMINI_MODEL=gemini-3.5-flash-lite
-    PORT=5000
-    FRONTEND_ORIGIN=http://localhost:5173
+### Backend
+- Node.js
+- Express.js
+- TypeScript
+- PostgreSQL (`pg`)
+- Zod for validation
+- CORS
+- Node SQL Parser
 
-Then run both services from the project root:
+### Database & Deployment
+- **PostgreSQL** — Relational database
+- **Supabase** — Managed PostgreSQL hosting
+- **Vercel** — Frontend hosting
+- **Render** — Backend hosting
+- **GitHub** — Version control
 
-    npm run dev
+## 🏗️ System Architecture
 
-Open the Vite URL, normally http://localhost:5173. Frontend API calls are proxied to localhost:5000. Restart the backend after changing environment variables.
+```text
+              USER
+                |
+                v
+        React Frontend
+             Vercel
+                |
+                | HTTP / REST API
+                v
+       Node.js + Express
+             Render
+                |
+                | PostgreSQL (pg)
+                v
+        Supabase Database
+            PostgreSQL
+```
 
-## First-user procedure
+The frontend communicates with the Express backend through API requests. The backend handles application logic and communicates with the PostgreSQL database hosted on Supabase.
 
-1. Click Launch app or Try it now.
-2. Choose Create an account. The AskDB account password is separate from a PostgreSQL password.
-3. Click Connect PostgreSQL and enter a connection name, host, port, exact database name, read-only username/password, and TLS setting.
-4. Click Test connection. No records are written. Readable base tables and their schemas/columns are discovered dynamically.
-5. Select 1 to 20 tables. Tables on which the login has write privileges cannot be selected.
-6. Click Save & open workspace. Credentials are encrypted on the backend and the password field is discarded from the browser component.
-7. Ask a question. Inspect the executed SQL and calculation, then sort, chart, or export the real returned rows.
+## 📁 Project Structure
 
-For the existing local setup, enter database Ask_db, username askdb_reader, the corresponding private password, localhost, port 5432, and TLS disabled if your local server has no TLS configured. Choose the tables you previously created. Those database records have not been deleted or replaced.
+```text
+AskDB/
+├── Backend/
+│   ├── src/
+│   │   └── server.ts
+│   ├── package.json
+│   ├── package-lock.json
+│   └── tsconfig.json
+│
+├── Frontend/
+│   └── ...
+│
+├── scripts/
+├── .gitignore
+├── package.json
+└── README.md
+```
 
-Legacy DATABASE_PROVIDER and PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD entries in your local .env no longer choose a shared database for the web app. Each account must save its own connection through the website. The optional verification script can still use those private entries; the application never imports them as another user's connection.
+## ⚙️ Installation & Setup
 
-## Working features
+### 1. Clone the repository
 
-- Registration, login, logout, seven-day server-side sessions, HttpOnly SameSite=Strict cookies, and origin checks for state-changing browser requests.
-- Password hashes use salted scrypt. Session tokens are random; only their hashes are stored.
-- Per-account connections; explicit ownership checks on schema access, queries, validation, history, table changes, reconnect/disconnect, and deletion.
-- AES-256-GCM encryption for saved connection configurations, bound to account and connection IDs. Passwords are never returned by connection APIs or sent to Gemini.
-- Dynamic PostgreSQL schemas, selected tables, column types, and foreign-key metadata. No fixed products/orders allowlist.
-- Gemini receives only the question and selected schema metadata, not query result rows. Google API data handling follows your account terms.
-- SQL parser checks one SELECT, schema-qualified selected tables, allowed built-in functions and casts. CTEs, writes, system tables, external functions, and SELECT INTO are blocked.
-- PostgreSQL READ ONLY transactions, 3-second statement timeout, 1-second lock timeout, and 1000-row output cap. Privileged database roles are rejected.
-- Persistent private question history, table sorting/pagination, chart label/metric selection, CSV formula-cell escaping, SQL copying, cancellation, and empty/error states.
-- Saved connection test/reconnect, disconnect, table selection changes, and removal. Removing a saved connection removes its app history, not any PostgreSQL objects or records.
-- Terminal landing design, Three.js background, keyboard shortcuts, reduced-motion support, and animation pause controls.
+```bash
+git clone https://github.com/rafay2ali/AskDB.git
+cd AskDB
+```
 
-## Where settings persist
+### 2. Backend setup
 
-By default, Backend/.data/accounts.sqlite holds accounts, hashed sessions, encrypted connection configurations, selected table names, and question history. Backend/.data/credentials.key holds the local development encryption key. Both are ignored by Git. No database result rows are persisted.
+Navigate to the backend directory:
 
-Keep the application database and encryption key together in a private backup. Losing the key makes saved connection credentials unrecoverable. Existing browser-local history from the old prototype is not automatically attached to any account.
+```bash
+cd Backend
+npm install
+```
 
-## Build and checks
+Create a `.env` file and configure the environment variables required by your backend.
 
-    npm run build
-    npm test
+Example:
 
-The backend now compiles to Backend/dist; after building, it can run with:
+```env
+DATABASE_URL=your_postgresql_connection_string
+APP_ENCRYPTION_KEY=your_secure_encryption_key
+PORT=5000
+NODE_ENV=development
+```
 
-    npm --prefix Backend start
+Start the development server:
 
-Tests use isolated in-memory account storage and mocked PostgreSQL/Gemini responses. They check credentials, session handling, account isolation, connection onboarding, dynamic SQL permissions, safe failures, and provider refusal handling. They do not create analytics fixtures in your database.
+```bash
+npm run dev
+```
 
-Optional browser verification on Windows with Google Chrome installed:
+For a production build:
 
-    npm run test:browser
+```bash
+npm run build
+npm start
+```
 
-Build first. This starts temporary servers and an isolated account store. If the old PG variables are present locally, it tests your actual PostgreSQL connection and row-count reads; the Gemini response is mocked to avoid API quota. It checks registration/login/logout, connection selection, querying, disconnect/reconnect, removal, landing interactions and mobile overflow. Screenshots are written under ignored .qa/. No PostgreSQL records are changed and test accounts are not persisted.
+### 3. Frontend setup
 
-Optional complete live Gemini + PostgreSQL verification (one AI request, may consume API quota):
+Open another terminal:
 
-    npm --prefix Backend run check:platform
+```bash
+cd Frontend
+npm install
+```
 
-This uses the private PG variables in Backend/.env, creates an ephemeral account, connects, selects one readable table and asks for a count. It prints no credentials and writes no PostgreSQL data.
+Create a `.env` file:
 
-## Hosting and connection reachability
+```env
+VITE_API_URL=http://localhost:5000
+```
 
-The backend, not the visitor's browser, connects to PostgreSQL. On a hosted app, localhost refers to the backend computer. A user's laptop database needs a reachable endpoint or a separate secure connector; this version does not include a private-network connector.
+Start the frontend:
 
-Production mode requires a separate private base64-encoded 32-byte APP_ENCRYPTION_KEY, a persistent APP_STORE_PATH, HTTPS, same-origin /api routing, and NODE_ENV=production. The backend then sets Secure cookies, requires verified database TLS, rejects private/link-local/loopback targets, and pins the resolved server address for the connection. Local development allows localhost and private database addresses. Do not publish a development-mode server as a public service.
+```bash
+npm run dev
+```
 
-This implementation is a single-server platform foundation. Email verification/password recovery, shared multi-instance session/storage infrastructure, account billing/quotas, and managed deployment are not included. Public deployment should include those operational choices and a security review.
+The frontend will run on the local development URL displayed by Vite.
+
+## 🗄️ Database Configuration
+
+AskDB uses **PostgreSQL**, hosted in production on **Supabase**.
+
+The backend connects to the database using the `pg` Node.js package.
+
+For production deployment:
+
+1. Create a PostgreSQL project on Supabase.
+2. Obtain the PostgreSQL connection string.
+3. Configure the database connection in the Render environment variables.
+4. Set up the required database schema and tables.
+5. Verify the connection between the backend and Supabase.
+
+Database credentials must remain on the backend and should never be exposed in frontend code.
+
+## ☁️ Deployment
+
+### Frontend — Vercel
+
+The React frontend is deployed on Vercel.
+
+**Live URL:** https://ask-db-seven.vercel.app/
+
+Configure the frontend API environment variable:
+
+```env
+VITE_API_URL=https://askdb-hww5.onrender.com
+```
+
+Redeploy the frontend after updating build-time environment variables.
+
+### Backend — Render
+
+The Express backend is deployed as a Render Web Service.
+
+**Live URL:** https://askdb-hww5.onrender.com
+
+Recommended configuration:
+
+| Setting | Value |
+|---|---|
+| Runtime | Node.js |
+| Root Directory | `Backend` |
+| Build Command | `npm ci && npm run build` |
+| Start Command | `npm start` |
+| Node.js Version | 22.x |
+
+Configure the required backend environment variables securely through the Render dashboard.
+
+### Database — Supabase
+
+Supabase provides managed PostgreSQL hosting for the production database.
+
+The backend communicates directly with PostgreSQL using a secure database connection.
+
+## 🔐 Security
+
+- Sensitive environment variables are stored outside the source code.
+- Database credentials remain on the backend.
+- Application encryption uses a dedicated environment key.
+- API input validation uses Zod.
+- Cross-origin requests are managed using CORS.
+- Production secrets should never be committed to GitHub.
+
+## 🧪 Available Scripts
+
+### Backend
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the TypeScript development server |
+| `npm run build` | Compile TypeScript |
+| `npm start` | Start the compiled backend |
+| `npm test` | Run backend tests |
+
+## 👨‍💻 Author
+
+**Abdur Rafeh**
+
+Full-Stack Developer
+
+GitHub: [@rafay2ali](https://github.com/rafay2ali)
+
+## 📄 License
+
+This project is currently configured with the ISC license in its backend package metadata.
