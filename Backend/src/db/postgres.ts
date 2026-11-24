@@ -22,11 +22,22 @@ export function databaseError(error: unknown, signal?: AbortSignal): AppError {
   if (signal?.aborted) return new AppError('Request cancelled.', 499, 'CANCELLED')
   if (error instanceof AppError) return error
   const code = (error as { code?: string })?.code || ''
-  if (code === '28P01' || code === '28000') return new AppError('PostgreSQL rejected the username or password.', 422, 'DATABASE_AUTH')
+  if (code === '28P01' || code === '28000') return new AppError('PostgreSQL rejected the database login. Check the read-only username and its password.', 422, 'DATABASE_AUTH')
   if (code === '3D000') return new AppError('Database not found. Check its exact name and capitalization.', 422, 'DATABASE_NAME')
   if (code === '57014' || code === '55P03') return new AppError('PostgreSQL stopped the query at its execution or lock timeout.', 408, 'QUERY_TIMEOUT')
   if (code === '42501') return new AppError('Grant schema USAGE and SELECT on the tables you want to query.', 422, 'DATABASE_PERMISSIONS')
-  if (/CERT|TLS|SSL|SELF_SIGNED/.test(code)) return new AppError('TLS verification failed. Use a trusted server certificate and the correct hostname.', 422, 'DATABASE_TLS')
+  if (code === 'ERR_TLS_CERT_ALTNAME_INVALID') {
+    return new AppError('TLS hostname mismatch. Use the exact database hostname from your provider. The database login was not checked.', 422, 'DATABASE_TLS_HOSTNAME')
+  }
+  if (code === 'CERT_HAS_EXPIRED' || code === 'CERT_NOT_YET_VALID') {
+    return new AppError('The database TLS certificate is expired or not yet valid. The database login was not checked.', 422, 'DATABASE_TLS_CERTIFICATE_DATE')
+  }
+  if (['DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_GET_ISSUER_CERT', 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'CERT_UNTRUSTED'].includes(code)) {
+    return new AppError('AskDB does not trust the database TLS certificate chain. Check the CA certificate configured on the backend. The database login was not checked.', 422, 'DATABASE_TLS_CA')
+  }
+  if (/CERT|TLS|SSL|SELF_SIGNED/.test(code)) {
+    return new AppError('The database TLS handshake failed. The database login was not checked.', 422, 'DATABASE_TLS')
+  }
   if (code.startsWith('42') || code.startsWith('22')) return new AppError('The query does not match the selected PostgreSQL schema or data types. Rephrase your question.', 422, 'QUERY_EXECUTION')
   return new AppError('Cannot connect to PostgreSQL. Check host, port, firewall, TLS settings, and that the server is running.', 503, 'DATABASE_UNAVAILABLE')
 }

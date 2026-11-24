@@ -13,7 +13,7 @@ import { encrypt,decrypt } from '../services/credentialService'
 import { hashPassword,verifyPassword } from '../services/authService'
 import { validateSql } from '../services/sqlGuard'
 import { selectedSchema } from '../services/schemaService'
-import { isPrivateAddress,resolveHost } from '../db/postgres'
+import { databaseError,isPrivateAddress,resolveHost } from '../db/postgres'
 import type { ConnectionConfig,SchemaTable } from '../types/index'
 const selected=[{schema:'analytics',name:'events'}]
 const tables:SchemaTable[]=[{...selected[0],columns:[{name:'name',type:'text'},{name:'amount',type:'numeric'}],writable:false,relationships:[]}]
@@ -35,6 +35,22 @@ test('production connection policy blocks private addresses and TLS bypass',asyn
   assert.equal(isPrivateAddress('8.8.8.8'),false)
   const previous=env.production;env.production=true
   try{await assert.rejects(resolveHost(config),/TLS/);await assert.rejects(resolveHost({...config,ssl:'verify-full'}),/not allowed/)}finally{env.production=previous}
+})
+test('database connection errors distinguish login rejection from TLS failures', () => {
+  const cases = [
+    ['28P01', 'DATABASE_AUTH', /rejected the database login/],
+    ['ERR_TLS_CERT_ALTNAME_INVALID', 'DATABASE_TLS_HOSTNAME', /hostname mismatch/],
+    ['UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'DATABASE_TLS_CA', /certificate chain/],
+    ['CERT_HAS_EXPIRED', 'DATABASE_TLS_CERTIFICATE_DATE', /expired/],
+    ['ERR_SSL_WRONG_VERSION_NUMBER', 'DATABASE_TLS', /handshake failed/],
+  ] as const
+
+  for (const [code, expectedCode, message] of cases) {
+    const result = databaseError(Object.assign(new Error('private database details'), { code }))
+    assert.equal(result.code, expectedCode)
+    assert.match(result.message, message)
+    assert.doesNotMatch(result.message, /private database details/)
+  }
 })
 test('accounts, sessions, connection onboarding, tenant isolation and real query pipeline',async t=>{
   const statements:string[]=[];let writable=false;let sql='SELECT name,amount FROM analytics.events';let connectError=false
