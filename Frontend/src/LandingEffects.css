@@ -115,3 +115,66 @@
 @media(max-width:700px){.landing-shell nav{gap:12px;letter-spacing:.3px;font-size:8px}}
 
 .connection-intro{padding:32px 5px 35px;max-width:520px}.connection-intro>.terminal-icon{width:32px;height:32px;color:#00ffad;margin-bottom:20px}.connection-intro h3{font-size:25px;margin-bottom:15px}.connection-intro p{font-size:14px;line-height:1.8;color:#b1cbb8;margin-bottom:24px}.onboarding-step{display:flex;gap:18px;margin:5px 0 27px}.onboarding-step>b{font:13px "IBM Plex Mono",monospace;color:#00ffad;padding-top:4px}.onboarding-step h3{font-size:18px;margin-bottom:7px}.onboarding-step p{font-size:13px;line-height:1.7;color:#abc6b3}.security-description{font-size:13px;line-height:1.8;margin:20px 0;color:#c6b9a9}
+
+@media (max-width: 700px) {
+  .landing-shell .topbar {
+    height: auto;
+    min-height: 68px;
+    padding-block: 8px;
+  }
+
+  .landing-shell nav {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 10px;
+  }
+
+  .landing-shell nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  .landing-shell .launch-small,
+  .landing-shell .avatar {
+    min-height: 40px;
+  }
+
+  .landing-shell .launch-small {
+    font-size: 11px;
+  }
+
+  .landing-shell .avatar {
+    min-width: 40px;
+  }
+
+  .landing-shell .hero-content {
+    padding-top: clamp(105px, 22vw, 180px);
+  }
+
+  .landing-shell .hero-buttons,
+  .landing-shell .system-strip {
+    flex-wrap: wrap;
+  }
+
+  .landing-shell .demo-grid,
+  .landing-shell .security-grid,
+  .landing-shell .features-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-shell .command-line input {
+    min-width: 0;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .landing-shell .stages {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-shell .stage {
+    min-height: auto;
+  }
+}
